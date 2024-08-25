@@ -1,8 +1,11 @@
+package com.example.codexblockly
+
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.View
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.robokarel.R
@@ -11,6 +14,7 @@ class ResultActivity : AppCompatActivity() {
 
     private lateinit var leftField: View
     private lateinit var rightField: View
+    private lateinit var faceImage: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -18,22 +22,26 @@ class ResultActivity : AppCompatActivity() {
 
         leftField = findViewById(R.id.leftField)
         rightField = findViewById(R.id.rightField)
+        faceImage = findViewById(R.id.faceImage)
+
+        // Stelle sicher, dass das Bild korrekt geladen wird
+        faceImage.setImageResource(R.drawable.face)
 
         val code = intent.getStringExtra("code")
         val ifLoop = intent.getBooleanExtra("ifLoop", false)
 
         if (code != null) {
-            // Erstelle einen Handler und füge eine Verzögerung von 8 Sekunden hinzu
+            // Verzögerung von 8 Sekunden, bevor die Befehle ausgeführt werden
             Handler(Looper.getMainLooper()).postDelayed({
                 executeCommands(code.split("\n"), ifLoop)
-            }, 8000) // 8000 Millisekunden = 8 Sekunden
+            }, 8000)
         } else {
             Toast.makeText(this, "No code provided", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun executeCommands(commands: List<String>, ifLoop: Boolean) {
-        // Implementiere die Logik, um die Befehle auszuführen und die Felder zu steuern
+        // Logik, um die Befehle auszuführen und die Felder zu steuern
         for (command in commands) {
             when (command) {
                 "forward" -> {
@@ -55,5 +63,10 @@ class ResultActivity : AppCompatActivity() {
             }
             Thread.sleep(5000) // Pause für 5 Sekunden
         }
+
+        // Verzögerung von 10 Sekunden, bevor zum Code-Bildschirm zurückgekehrt wird
+        Handler(Looper.getMainLooper()).postDelayed({
+            finish() // Beendet die aktuelle Aktivität und kehrt zum vorherigen Bildschirm zurück
+        }, 10000) // 10000 Millisekunden = 10 Sekunden
     }
 }
