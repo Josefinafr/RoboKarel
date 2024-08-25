@@ -7,9 +7,13 @@
 
     <EditText
         android:id="@+id/codeInput"
+        android:layout_marginTop="60dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Write or Click the Buttons for your Code" />
+        android:minHeight="350dp"
+        android:hint="Write or Click the Buttons for your Code"
+        android:background="@drawable/edit_text_border"
+        android:padding="20dp"/>
 
     <CheckBox
         android:id="@+id/ifLoopCheckbox"
@@ -33,28 +37,32 @@
             android:id="@+id/forwardButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Forward" />
+            android:text="Forward"
+            android:backgroundTint="#3F423F"/>
 
         <Button
             android:id="@+id/leftButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Left"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#3F423F"/>
 
         <Button
             android:id="@+id/rightButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Right"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#3F423F"/>
 
         <Button
             android:id="@+id/stopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Stop"
-            android:layout_marginStart="8dp" />
+            android:layout_marginStart="8dp"
+            android:backgroundTint="#3F423F"/>
     </LinearLayout>
 
     <Button
@@ -63,6 +71,7 @@
         android:layout_height="wrap_content"
         android:text="Play"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="24dp" />
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#4CAF50"/>
 
 </LinearLayout>
