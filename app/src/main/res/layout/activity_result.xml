@@ -26,14 +26,14 @@
         <View
             android:id="@+id/leftField"
             android:layout_width="0dp"
-            android:layout_height="300dp"
+            android:layout_height="500dp"
             android:layout_weight="1"
             android:background="#000000"/>
 
         <View
             android:id="@+id/rightField"
             android:layout_width="0dp"
-            android:layout_height="300dp"
+            android:layout_height="500dp"
             android:layout_weight="1"
             android:background="#000000"
             android:layout_marginStart="8dp"/>
