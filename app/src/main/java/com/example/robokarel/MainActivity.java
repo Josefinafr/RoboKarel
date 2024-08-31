@@ -5,10 +5,7 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.example.robokarel.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -19,12 +16,14 @@ public class MainActivity extends AppCompatActivity {
     private Button rightButton;
     private Button stopButton;
     private Button playButton;
+    private Button loopButton; // Neuer Loop-Button
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialisierung der Views
         codeInput = findViewById(R.id.codeInput);
         ifLoopCheckbox = findViewById(R.id.ifLoopCheckbox);
         forwardButton = findViewById(R.id.forwardButton);
@@ -32,17 +31,23 @@ public class MainActivity extends AppCompatActivity {
         rightButton = findViewById(R.id.rightButton);
         stopButton = findViewById(R.id.stopButton);
         playButton = findViewById(R.id.playButton);
+        loopButton = findViewById(R.id.loopButton); // Neuer Loop-Button
 
+        // Hinzufügen der OnClickListener zu den Buttons
         forwardButton.setOnClickListener(v -> codeInput.append("forward\n"));
-
         leftButton.setOnClickListener(v -> codeInput.append("left\n"));
-
         rightButton.setOnClickListener(v -> codeInput.append("right\n"));
-
         stopButton.setOnClickListener(v -> codeInput.append("stop\n"));
 
+        // OnClickListener für den Loop-Button
+        loopButton.setOnClickListener(v -> {
+            // Fügt den Text "loop " in das EditText-Feld ein
+            codeInput.append("loop\n");
+        });
+
+        // OnClickListener für den Play-Button
         playButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MainActivity.this, com.example.robokarel.ResultActivity.class);
+            Intent intent = new Intent(MainActivity.this, ResultActivity.class);
             intent.putExtra("code", codeInput.getText().toString());
             intent.putExtra("ifLoop", ifLoopCheckbox.isChecked());
             startActivity(intent);

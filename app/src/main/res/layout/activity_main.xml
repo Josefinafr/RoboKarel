@@ -31,14 +31,22 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="30dp">
+
+        <Button
+            android:id="@+id/loopButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loop"
+            android:layout_marginLeft="60dp"
+            android:backgroundTint="#3F423F"/>
 
         <Button
             android:id="@+id/forwardButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="110dp"
             android:text="Forward"
+            android:layout_marginStart="50dp"
             android:backgroundTint="#3F423F"/>
 
         <Button

@@ -15,9 +15,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class ResultActivity extends AppCompatActivity {
 
-    private static final int INITIAL_DELAY_MS = 5000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
-    private static final int COMMAND_DELAY_MS = 3000; // Verzögerung zwischen den Befehlen
-    private static final int LOOP_CHECK_DELAY_MS = 1000; // Verzögerung für Schleifenüberprüfung, wenn Hindernis vorhanden ist
+    private static final int INITIAL_DELAY_MS = 8000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
+    private static final int COMMAND_DELAY_MS = 5000; // Verzögerung zwischen den Befehlen
     private static final int RETURN_DELAY_MS = 10000; // Verzögerung, bevor zum Code-Bildschirm zurückgekehrt wird
     private static final float LIGHT_THRESHOLD = 10; // Schwelle für die Lichtintensität, um „Front Is Clear“ zu bestimmen
 
@@ -87,6 +86,7 @@ public class ResultActivity extends AppCompatActivity {
     private void executeCommands(String[] commands, boolean ifLoop) {
         commandRunnable = new Runnable() {
             int index = 0;
+            boolean isLooping = ifLoop; // initialisiere Loop-Status basierend auf Checkbox
 
             @Override
             public void run() {
@@ -97,14 +97,28 @@ public class ResultActivity extends AppCompatActivity {
                 }
 
                 if (index < commands.length) {
-                    String command = commands[index];
-                    executeCommand(command);
-                    index++;
+                    String command = commands[index].trim();
+
+                    // Prüfen, ob der aktuelle Befehl "loop" ist
+                    if (command.equals("loop")) {
+                        isLooping = true; // Aktiviere den Loop-Modus, wenn der Befehl "loop" ist
+                        index++; // Gehe zum nächsten Befehl
+                        handler.post(this); // Setze die Schleife fort ohne Verzögerung
+                        return;
+                    }
+
+                    // Führe den aktuellen Befehl aus
+                    if (!command.isEmpty()) {
+                        executeCommand(command);
+                    }
+
+                    index++; // Gehe zum nächsten Befehl
+
                     handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
-                } else if (ifLoop && isFrontClear) {
-                    // Reset index und starte erneut, wenn in Schleife und Front clear
+                } else if (isLooping && isFrontClear) {
+                    // Setze den Index zurück und starte erneut, wenn in der Schleife und "Front Is Clear"
                     index = 0;
-                    handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
+                    handler.postDelayed(this, COMMAND_DELAY_MS); // Wiederhole den Code
                 } else {
                     // Nach Abschluss oder wenn Loop abgebrochen wird
                     returnToCodeScreen();
