@@ -13,16 +13,22 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.robokarel.R;
-
 public class ResultActivity extends AppCompatActivity {
+
+    private static final int INITIAL_DELAY_MS = 5000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
+    private static final int COMMAND_DELAY_MS = 3000; // Verzögerung zwischen den Befehlen
+    private static final int LOOP_CHECK_DELAY_MS = 1000; // Verzögerung für Schleifenüberprüfung, wenn Hindernis vorhanden ist
+    private static final int RETURN_DELAY_MS = 10000; // Verzögerung, bevor zum Code-Bildschirm zurückgekehrt wird
+    private static final float LIGHT_THRESHOLD = 10; // Schwelle für die Lichtintensität, um „Front Is Clear“ zu bestimmen
 
     private View leftField;
     private View rightField;
     private ImageView faceImage;
     private SensorManager sensorManager;
-    private Sensor proximitySensor;
-    private boolean isFrontClear = true;
+    private Sensor lightSensor;
+    private boolean isFrontClear = true; // Standardmäßig ist „Front Is Clear“ wahr
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private Runnable commandRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,63 +43,71 @@ public class ResultActivity extends AppCompatActivity {
         faceImage.setImageResource(R.drawable.face);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY);
+        lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-        if (proximitySensor != null) {
-            sensorManager.registerListener(proximitySensorListener, proximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
+        if (lightSensor != null) {
+            sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        } else {
+            Toast.makeText(this, "Lichtsensor nicht verfügbar", Toast.LENGTH_SHORT).show();
         }
 
         String code = getIntent().getStringExtra("code");
         boolean ifLoop = getIntent().getBooleanExtra("ifLoop", false);
 
         if (code != null) {
-            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    executeCommands(code.split("\n"), ifLoop);
-                }
-            }, 8000);
+            handler.postDelayed(() -> executeCommands(code.split("\n"), ifLoop), INITIAL_DELAY_MS);
         } else {
             Toast.makeText(this, "No code provided", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private final SensorEventListener proximitySensorListener = new SensorEventListener() {
+    // SensorEventListener für den Lichtsensor
+    private final SensorEventListener lightSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-                isFrontClear = event.values[0] > 0; // assumes 0 means close, >0 means far
+            if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+                float lightLevel = event.values[0]; // Lichtlevel in Lux
+
+                // Bedingung „Front Is Clear“ basierend auf Lichtlevel festlegen
+                isFrontClear = lightLevel > LIGHT_THRESHOLD; // Schwellenwert für Lichtintensität
+
+                // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort zur Code-Ansicht zurückkehren
+                if (!isFrontClear) {
+                    returnToCodeScreenImmediately();
+                }
             }
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
-            // Do nothing for now
+            // Keine Aktion erforderlich
         }
     };
 
     private void executeCommands(String[] commands, boolean ifLoop) {
-        Handler handler = new Handler(Looper.getMainLooper());
-        Runnable commandRunnable = new Runnable() {
+        commandRunnable = new Runnable() {
             int index = 0;
 
             @Override
             public void run() {
+                if (!isFrontClear) {
+                    // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort abbrechen
+                    returnToCodeScreenImmediately();
+                    return;
+                }
+
                 if (index < commands.length) {
                     String command = commands[index];
                     executeCommand(command);
                     index++;
-                    handler.postDelayed(this, 5000); // Nächster Befehl nach 5 Sekunden
+                    handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
                 } else if (ifLoop && isFrontClear) {
                     // Reset index und starte erneut, wenn in Schleife und Front clear
                     index = 0;
-                    handler.postDelayed(this, 5000); // Nächster Befehl nach 5 Sekunden
-                } else if (ifLoop && !isFrontClear) {
-                    // Wenn in Schleife und Hindernis, warte 1 Sekunde und prüfe erneut
-                    handler.postDelayed(this, 1000);
+                    handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
                 } else {
                     // Nach Abschluss oder wenn Loop abgebrochen wird
-                    handler.postDelayed(() -> finish(), 10000); // Zurück zum Code-Bildschirm nach 10 Sekunden
+                    returnToCodeScreen();
                 }
             }
         };
@@ -121,11 +135,23 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
+    private void returnToCodeScreenImmediately() {
+        // Entferne alle geplanten Befehle und kehre sofort zum Code-Bildschirm zurück
+        handler.removeCallbacks(commandRunnable);
+        finish();
+    }
+
+    private void returnToCodeScreen() {
+        // Beende die aktuelle Aktivität und kehre zum Code-Bildschirm zurück nach einer Verzögerung
+        handler.postDelayed(() -> finish(), RETURN_DELAY_MS);
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (proximitySensor != null) {
-            sensorManager.unregisterListener(proximitySensorListener);
+        if (lightSensor != null) {
+            sensorManager.unregisterListener(lightSensorListener);
         }
+        handler.removeCallbacks(commandRunnable); // Entferne alle geplanten Befehle, wenn die Aktivität zerstört wird
     }
 }

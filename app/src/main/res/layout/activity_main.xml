@@ -19,13 +19,13 @@
         android:id="@+id/ifLoopCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="If-Loop"
+        android:text="LOOP"
         android:layout_marginTop="16dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="front is clear" />
+        android:text="Click this checkbox if you want the code to repeat itself, while front is clear." />
 
     <LinearLayout
         android:layout_width="wrap_content"
