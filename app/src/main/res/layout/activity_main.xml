@@ -32,14 +32,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginTop="30dp">
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="60dp">
 
         <Button
             android:id="@+id/loopButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Loop"
-            android:layout_marginLeft="60dp"
             android:backgroundTint="#3F423F"/>
 
         <Button

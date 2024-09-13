@@ -26,6 +26,7 @@ public class ResultActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor lightSensor;
     private boolean isFrontClear = true; // Standardmäßig ist „Front Is Clear“ wahr
+    private boolean isLooping = false; // Standardmäßig ist keine Schleife aktiv
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable commandRunnable;
 
@@ -44,17 +45,20 @@ public class ResultActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-        if (lightSensor != null) {
+        // Code aus dem Intent holen
+        String code = getIntent().getStringExtra("code");
+        boolean ifLoopCheckbox = getIntent().getBooleanExtra("ifLoop", false);
+
+        // Bestimmen, ob eine Schleife notwendig ist
+        isLooping = ifLoopCheckbox || code.contains("loop");
+
+        // Nur wenn Loop aktiv ist, überwache den Lichtsensor
+        if (isLooping && lightSensor != null) {
             sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        } else {
-            Toast.makeText(this, "Lichtsensor nicht verfügbar", Toast.LENGTH_SHORT).show();
         }
 
-        String code = getIntent().getStringExtra("code");
-        boolean ifLoop = getIntent().getBooleanExtra("ifLoop", false);
-
         if (code != null) {
-            handler.postDelayed(() -> executeCommands(code.split("\n"), ifLoop), INITIAL_DELAY_MS);
+            handler.postDelayed(() -> executeCommands(code.split("\n"), ifLoopCheckbox), INITIAL_DELAY_MS);
         } else {
             Toast.makeText(this, "No code provided", Toast.LENGTH_SHORT).show();
         }
@@ -83,14 +87,14 @@ public class ResultActivity extends AppCompatActivity {
         }
     };
 
-    private void executeCommands(String[] commands, boolean ifLoop) {
+    private void executeCommands(String[] commands, boolean ifLoopCheckbox) {
         commandRunnable = new Runnable() {
             int index = 0;
-            boolean isLooping = ifLoop; // initialisiere Loop-Status basierend auf Checkbox
 
             @Override
             public void run() {
-                if (!isFrontClear) {
+                // Nur wenn die Schleifenlogik aktiv ist, prüfe die Bedingung "Front Is Clear"
+                if (isLooping && !isFrontClear) {
                     // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort abbrechen
                     returnToCodeScreenImmediately();
                     return;
@@ -163,7 +167,7 @@ public class ResultActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (lightSensor != null) {
+        if (lightSensor != null && isLooping) {
             sensorManager.unregisterListener(lightSensorListener);
         }
         handler.removeCallbacks(commandRunnable); // Entferne alle geplanten Befehle, wenn die Aktivität zerstört wird
