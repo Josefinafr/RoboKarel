@@ -3,15 +3,16 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="#F5F5F5">
+    android:background="#FFFFFF">
 
     <ImageView
         android:id="@+id/faceImage"
-        android:layout_width="450dp"
-        android:layout_height="400dp"
+        android:layout_width="500dp"
+        android:layout_height="500dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="50dp"
         android:layout_marginBottom="24dp"
+        android:backgroundTint="#FFFFFF"
         android:src="@drawable/face" /><!-- Hier sicherstellen, dass der Bildname korrekt ist -->
 
 
@@ -26,14 +27,14 @@
         <View
             android:id="@+id/leftField"
             android:layout_width="0dp"
-            android:layout_height="500dp"
+            android:layout_height="400dp"
             android:layout_weight="1"
             android:background="#000000"/>
 
         <View
             android:id="@+id/rightField"
             android:layout_width="0dp"
-            android:layout_height="500dp"
+            android:layout_height="400dp"
             android:layout_weight="1"
             android:background="#000000"
             android:layout_marginStart="8dp"/>

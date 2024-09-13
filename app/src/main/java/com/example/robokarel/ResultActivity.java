@@ -26,7 +26,7 @@ public class ResultActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor lightSensor;
     private boolean isFrontClear = true; // Standardmäßig ist „Front Is Clear“ wahr
-    private boolean isLooping = false; // Standardmäßig ist keine Schleife aktiv
+    private boolean isLooping = false; // Wird durch Checkbox oder Loop-Befehl aktiviert
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable commandRunnable;
 
@@ -45,30 +45,31 @@ public class ResultActivity extends AppCompatActivity {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-        // Code aus dem Intent holen
+        if (lightSensor != null) {
+            sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        } else {
+            Toast.makeText(this, "Lichtsensor nicht verfügbar", Toast.LENGTH_SHORT).show();
+        }
+
         String code = getIntent().getStringExtra("code");
         boolean ifLoopCheckbox = getIntent().getBooleanExtra("ifLoop", false);
 
-        // Bestimmen, ob eine Schleife notwendig ist
+        // Überprüfen, ob die Checkbox aktiviert ist oder der loop-Befehl im Code steht
         isLooping = ifLoopCheckbox || code.contains("loop");
 
-        // Nur wenn Loop aktiv ist, überwache den Lichtsensor
-        if (isLooping && lightSensor != null) {
-            sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
+        // Befehle ausführen nach einer Verzögerung
         if (code != null) {
-            handler.postDelayed(() -> executeCommands(code.split("\n"), ifLoopCheckbox), INITIAL_DELAY_MS);
+            handler.postDelayed(() -> executeCommands(code.split("\n")), INITIAL_DELAY_MS);
         } else {
             Toast.makeText(this, "No code provided", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // SensorEventListener für den Lichtsensor
+    // SensorEventListener für den Lichtsensor, nur aktiv, wenn isLooping true ist
     private final SensorEventListener lightSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+            if (event.sensor.getType() == Sensor.TYPE_LIGHT && isLooping) {
                 float lightLevel = event.values[0]; // Lichtlevel in Lux
 
                 // Bedingung „Front Is Clear“ basierend auf Lichtlevel festlegen
@@ -87,51 +88,50 @@ public class ResultActivity extends AppCompatActivity {
         }
     };
 
-    private void executeCommands(String[] commands, boolean ifLoopCheckbox) {
+    // Ausführung der Befehle
+    private void executeCommands(String[] commands) {
         commandRunnable = new Runnable() {
             int index = 0;
 
             @Override
             public void run() {
-                // Nur wenn die Schleifenlogik aktiv ist, prüfe die Bedingung "Front Is Clear"
-                if (isLooping && !isFrontClear) {
-                    // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort abbrechen
-                    returnToCodeScreenImmediately();
-                    return;
-                }
+                if (!isLooping || isFrontClear) {
+                    // Nur wenn "Front Is Clear" oder die Schleife nicht aktiv ist, Befehle ausführen
+                    if (index < commands.length) {
+                        String command = commands[index].trim();
 
-                if (index < commands.length) {
-                    String command = commands[index].trim();
+                        // Prüfen, ob der aktuelle Befehl "loop" ist, wenn er im Code steht
+                        if (command.equals("loop")) {
+                            // Schleife aktiviert, Befehle wiederholen
+                            isLooping = true;
+                            index++; // Gehe zum nächsten Befehl
+                            handler.post(this); // Fortfahren
+                            return;
+                        }
 
-                    // Prüfen, ob der aktuelle Befehl "loop" ist
-                    if (command.equals("loop")) {
-                        isLooping = true; // Aktiviere den Loop-Modus, wenn der Befehl "loop" ist
+                        // Führe den aktuellen Befehl aus
+                        if (!command.isEmpty()) {
+                            executeCommand(command);
+                        }
+
                         index++; // Gehe zum nächsten Befehl
-                        handler.post(this); // Setze die Schleife fort ohne Verzögerung
-                        return;
+
+                        handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
+                    } else if (isLooping && isFrontClear) {
+                        // Wiederhole den Code, wenn die Schleife aktiv ist und "Front Is Clear"
+                        index = 0;
+                        handler.postDelayed(this, COMMAND_DELAY_MS);
+                    } else {
+                        // Nach Abschluss oder wenn Loop abgebrochen wird
+                        returnToCodeScreen();
                     }
-
-                    // Führe den aktuellen Befehl aus
-                    if (!command.isEmpty()) {
-                        executeCommand(command);
-                    }
-
-                    index++; // Gehe zum nächsten Befehl
-
-                    handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
-                } else if (isLooping && isFrontClear) {
-                    // Setze den Index zurück und starte erneut, wenn in der Schleife und "Front Is Clear"
-                    index = 0;
-                    handler.postDelayed(this, COMMAND_DELAY_MS); // Wiederhole den Code
-                } else {
-                    // Nach Abschluss oder wenn Loop abgebrochen wird
-                    returnToCodeScreen();
                 }
             }
         };
         handler.post(commandRunnable);
     }
 
+    // Ausführung der jeweiligen Befehle
     private void executeCommand(String command) {
         switch (command) {
             case "forward":
@@ -167,7 +167,7 @@ public class ResultActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (lightSensor != null && isLooping) {
+        if (lightSensor != null) {
             sensorManager.unregisterListener(lightSensorListener);
         }
         handler.removeCallbacks(commandRunnable); // Entferne alle geplanten Befehle, wenn die Aktivität zerstört wird
