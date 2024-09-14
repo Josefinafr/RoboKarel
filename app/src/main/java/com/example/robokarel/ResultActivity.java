@@ -15,9 +15,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class ResultActivity extends AppCompatActivity {
 
-    private static final int INITIAL_DELAY_MS = 8000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
-    private static final int COMMAND_DELAY_MS = 5000; // Verzögerung zwischen den Befehlen
-    private static final int RETURN_DELAY_MS = 10000; // Verzögerung, bevor zum Code-Bildschirm zurückgekehrt wird
+    private static final int INITIAL_DELAY_MS = 4000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
+    private static final int COMMAND_DELAY_FORWARD_MS = 4000; // Verzögerung für forward-Befehl
+    private static final int COMMAND_DELAY_LEFT_RIGHT_MS = 1000; // Kürzere Verzögerung für left- und right-Befehle
+    private static final int RETURN_DELAY_MS = 50; // Verzögerung, bevor zum Code-Bildschirm zurückgekehrt wird
     private static final float LIGHT_THRESHOLD = 10; // Schwelle für die Lichtintensität, um „Front Is Clear“ zu bestimmen
 
     private View leftField;
@@ -26,7 +27,6 @@ public class ResultActivity extends AppCompatActivity {
     private SensorManager sensorManager;
     private Sensor lightSensor;
     private boolean isFrontClear = true; // Standardmäßig ist „Front Is Clear“ wahr
-    private boolean isLooping = false; // Wird durch Checkbox oder Loop-Befehl aktiviert
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable commandRunnable;
 
@@ -52,24 +52,20 @@ public class ResultActivity extends AppCompatActivity {
         }
 
         String code = getIntent().getStringExtra("code");
-        boolean ifLoopCheckbox = getIntent().getBooleanExtra("ifLoop", false);
+        boolean ifLoop = getIntent().getBooleanExtra("ifLoop", false);
 
-        // Überprüfen, ob die Checkbox aktiviert ist oder der loop-Befehl im Code steht
-        isLooping = ifLoopCheckbox || code.contains("loop");
-
-        // Befehle ausführen nach einer Verzögerung
         if (code != null) {
-            handler.postDelayed(() -> executeCommands(code.split("\n")), INITIAL_DELAY_MS);
+            handler.postDelayed(() -> executeCommands(code.split("\n"), ifLoop), INITIAL_DELAY_MS);
         } else {
             Toast.makeText(this, "No code provided", Toast.LENGTH_SHORT).show();
         }
     }
 
-    // SensorEventListener für den Lichtsensor, nur aktiv, wenn isLooping true ist
+    // SensorEventListener für den Lichtsensor
     private final SensorEventListener lightSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
-            if (event.sensor.getType() == Sensor.TYPE_LIGHT && isLooping) {
+            if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 float lightLevel = event.values[0]; // Lichtlevel in Lux
 
                 // Bedingung „Front Is Clear“ basierend auf Lichtlevel festlegen
@@ -88,50 +84,56 @@ public class ResultActivity extends AppCompatActivity {
         }
     };
 
-    // Ausführung der Befehle
-    private void executeCommands(String[] commands) {
+    private void executeCommands(String[] commands, boolean ifLoop) {
         commandRunnable = new Runnable() {
             int index = 0;
+            boolean isLooping = ifLoop; // initialisiere Loop-Status basierend auf Checkbox
 
             @Override
             public void run() {
-                if (!isLooping || isFrontClear) {
-                    // Nur wenn "Front Is Clear" oder die Schleife nicht aktiv ist, Befehle ausführen
-                    if (index < commands.length) {
-                        String command = commands[index].trim();
+                if (!isFrontClear) {
+                    // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort abbrechen
+                    returnToCodeScreenImmediately();
+                    return;
+                }
 
-                        // Prüfen, ob der aktuelle Befehl "loop" ist, wenn er im Code steht
-                        if (command.equals("loop")) {
-                            // Schleife aktiviert, Befehle wiederholen
-                            isLooping = true;
-                            index++; // Gehe zum nächsten Befehl
-                            handler.post(this); // Fortfahren
-                            return;
-                        }
+                if (index < commands.length) {
+                    String command = commands[index].trim();
 
-                        // Führe den aktuellen Befehl aus
-                        if (!command.isEmpty()) {
-                            executeCommand(command);
-                        }
-
+                    // Prüfen, ob der aktuelle Befehl "loop" ist
+                    if (command.equals("loop")) {
+                        isLooping = true; // Aktiviere den Loop-Modus, wenn der Befehl "loop" ist
                         index++; // Gehe zum nächsten Befehl
-
-                        handler.postDelayed(this, COMMAND_DELAY_MS); // Nächster Befehl nach festgelegter Verzögerung
-                    } else if (isLooping && isFrontClear) {
-                        // Wiederhole den Code, wenn die Schleife aktiv ist und "Front Is Clear"
-                        index = 0;
-                        handler.postDelayed(this, COMMAND_DELAY_MS);
-                    } else {
-                        // Nach Abschluss oder wenn Loop abgebrochen wird
-                        returnToCodeScreen();
+                        handler.post(this); // Setze die Schleife fort ohne Verzögerung
+                        return;
                     }
+
+                    // Führe den aktuellen Befehl aus
+                    if (!command.isEmpty()) {
+                        executeCommand(command);
+                    }
+
+                    // Unterschiedliche Verzögerungen basierend auf dem Befehl
+                    int delay = COMMAND_DELAY_FORWARD_MS; // Standardmäßig für forward
+                    if (command.equals("left") || command.equals("right")) {
+                        delay = COMMAND_DELAY_LEFT_RIGHT_MS; // Kürzere Verzögerung für left und right
+                    }
+
+                    index++; // Gehe zum nächsten Befehl
+                    handler.postDelayed(this, delay); // Nächster Befehl nach der festgelegten Verzögerung
+                } else if (isLooping && isFrontClear) {
+                    // Setze den Index zurück und starte erneut, wenn in der Schleife und "Front Is Clear"
+                    index = 0;
+                    handler.postDelayed(this, COMMAND_DELAY_FORWARD_MS); // Wiederhole den Code
+                } else {
+                    // Nach Abschluss oder wenn Loop abgebrochen wird
+                    returnToCodeScreen();
                 }
             }
         };
         handler.post(commandRunnable);
     }
 
-    // Ausführung der jeweiligen Befehle
     private void executeCommand(String command) {
         switch (command) {
             case "forward":
