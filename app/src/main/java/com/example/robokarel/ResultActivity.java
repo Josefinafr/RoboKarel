@@ -18,7 +18,7 @@ public class ResultActivity extends AppCompatActivity {
     private static final int INITIAL_DELAY_MS = 4000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
     private static final int COMMAND_DELAY_FORWARD_MS = 4000; // Verzögerung für forward-Befehl
     private static final int COMMAND_DELAY_LEFT_RIGHT_MS = 1000; // Kürzere Verzögerung für left- und right-Befehle
-    private static final int RETURN_DELAY_MS = 50; // Verzögerung, bevor zum Code-Bildschirm zurückgekehrt wird
+    private static final int RETURN_DELAY_MS = 100; // Verzögerung, bevor zum Code-Bildschirm zurückgekehrt wird
     private static final float LIGHT_THRESHOLD = 10; // Schwelle für die Lichtintensität, um „Front Is Clear“ zu bestimmen
 
     private View leftField;
@@ -71,9 +71,10 @@ public class ResultActivity extends AppCompatActivity {
                 // Bedingung „Front Is Clear“ basierend auf Lichtlevel festlegen
                 isFrontClear = lightLevel > LIGHT_THRESHOLD; // Schwellenwert für Lichtintensität
 
-                // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort zur Code-Ansicht zurückkehren
+                // Front Is Clear nur prüfen, wenn der Loop-Modus aktiv ist
                 if (!isFrontClear) {
-                    returnToCodeScreenImmediately();
+                    // Mache nichts, da der Loop-Modus nicht aktiv ist
+                    return;
                 }
             }
         }
@@ -91,7 +92,8 @@ public class ResultActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-                if (!isFrontClear) {
+                // Überprüfung auf Front Is Clear nur durchführen, wenn Loop aktiv ist
+                if (isLooping && !isFrontClear) {
                     // Wenn "Front Is Clear" nicht mehr gegeben ist, sofort abbrechen
                     returnToCodeScreenImmediately();
                     return;
