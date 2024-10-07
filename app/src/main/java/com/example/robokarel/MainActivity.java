@@ -7,6 +7,15 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * MainActivity
+ *
+ * The MainActivity.java file is the primary interface of the application,
+ * where users can input commands manually or add them using predefined buttons
+ *
+ *
+ * @author Josefina Fritz
+ */
 public class MainActivity extends AppCompatActivity {
 
     private EditText codeInput;

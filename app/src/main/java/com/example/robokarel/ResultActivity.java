@@ -13,6 +13,14 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
+/**
+ * ResultActivity
+ *
+ * The ResultActivity.java file is in charge of responding to commands given by MainActivity
+ *
+ * @author Josefina Fritz
+ */
+
 public class ResultActivity extends AppCompatActivity {
 
     private static final int INITIAL_DELAY_MS = 4000; // Initiale Verzögerung, bevor die Befehle ausgeführt werden
