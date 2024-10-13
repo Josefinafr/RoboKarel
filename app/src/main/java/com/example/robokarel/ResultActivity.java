@@ -15,20 +15,21 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class ResultActivity extends AppCompatActivity {
 
-    private static final int INITIAL_DELAY_MS = 1000; // Reduziere initiale Verzögerung
-    private static final int COMMAND_DELAY_FORWARD_MS = 3000; // Kürzere Verzögerung für forward
-    private static final int COMMAND_DELAY_LEFT_RIGHT_MS = 1000; // Kürzere Verzögerung für left und right
-    private static final int COMMAND_DELAY_LOOP_MS = 500; // Neue Konstante für kürzere Pause zwischen Loops
-    private static final int RETURN_DELAY_MS = 100;
-    private static final float LIGHT_THRESHOLD = 10;
+    // Verzögerungen für verschiedene Befehle und Schleifen
+    private static final int INITIAL_DELAY_MS = 1000; // Verzögerung vor dem Start der Befehlsausführung
+    private static final int COMMAND_DELAY_FORWARD_MS = 2000; // Verzögerung für "forward"-Befehl
+    private static final int COMMAND_DELAY_LEFT_RIGHT_MS = 500; // Verzögerung für "left" und "right"-Befehle
+    private static final int COMMAND_DELAY_LOOP_MS = 500; // Verzögerung zwischen den Loop-Wiederholungen
+    private static final int RETURN_DELAY_MS = 100; // Verzögerung vor dem Rücksprung zum Code-Bildschirm
+    private static final float LIGHT_THRESHOLD = 10; // Schwelle für die Lichtintensität zur Prüfung, ob „Front Is Clear“
 
     private View leftField;
     private View rightField;
     private ImageView faceImage;
     private SensorManager sensorManager;
     private Sensor lightSensor;
-    private boolean isFrontClear = true;
-    private Handler handler = new Handler(Looper.getMainLooper());
+    private boolean isFrontClear = true; // Standardmäßig ist „Front Is Clear“ auf true gesetzt
+    private Handler handler = new Handler(Looper.getMainLooper()); // Handler zur Ausführung von verzögerten Aufgaben
     private Runnable commandRunnable;
 
     @Override
@@ -36,31 +37,35 @@ public class ResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
 
+        // Initialisiere Views und setze das Bild für das "faceImage"
         leftField = findViewById(R.id.leftField);
         rightField = findViewById(R.id.rightField);
         faceImage = findViewById(R.id.faceImage);
+        faceImage.setImageResource(R.drawable.face); // Lade das Bild für das Gesicht
 
-        faceImage.setImageResource(R.drawable.face);
-
+        // Initialisiere den Lichtsensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
+        // Falls ein Lichtsensor verfügbar ist, registriere den Listener
         if (lightSensor != null) {
             sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             Toast.makeText(this, "Lichtsensor nicht verfügbar", Toast.LENGTH_SHORT).show();
         }
 
+        // Hole den Code und den Loop-Modus aus der übergebenen Absicht (Intent)
         String code = getIntent().getStringExtra("code");
         boolean ifLoop = getIntent().getBooleanExtra("ifLoop", false);
 
-        // Erkenne das Wort "loop" im Code und setze ifLoop auf true, falls gefunden
+        // Überprüfe, ob der Text "loop" im Code vorhanden ist und aktiviere den Loop-Modus, falls er gefunden wird
         if (code != null && code.toLowerCase().contains("loop")) {
-            ifLoop = true; // Loop-Modus aktivieren, wenn "loop" im Code vorkommt
+            ifLoop = true; // Setze Loop-Modus auf true, wenn "loop" im Code enthalten ist
         }
 
-        final boolean finalIfLoop = ifLoop;
+        final boolean finalIfLoop = ifLoop; // Macht ifLoop final für die Lambda-Ausdrücke
 
+        // Starte die Befehle nach der initialen Verzögerung, falls ein Code bereitgestellt wurde
         if (code != null) {
             handler.postDelayed(() -> executeCommands(code.split("\n"), finalIfLoop), INITIAL_DELAY_MS);
         } else {
@@ -68,72 +73,80 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
+    // SensorEventListener für den Lichtsensor
     private final SensorEventListener lightSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+                // Hole den aktuellen Lichtlevel in Lux
                 float lightLevel = event.values[0];
-                isFrontClear = lightLevel > LIGHT_THRESHOLD;
+                isFrontClear = lightLevel > LIGHT_THRESHOLD; // Setze isFrontClear basierend auf dem Lichtlevel
 
-                // Sofortiger Abbruch, wenn "Front Is Clear" nicht mehr wahr ist
+                // Wenn "Front Is Clear" nicht mehr wahr ist, breche den Code sofort ab
                 if (!isFrontClear) {
-                    returnToCodeScreenImmediately();  // Bricht sofort ab
+                    returnToCodeScreenImmediately();  // Bricht sofort ab und kehrt zum Code-Bildschirm zurück
                 }
             }
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
-            // Keine Aktion erforderlich
+            // Keine Aktion erforderlich bei Änderungen der Genauigkeit
         }
     };
 
+    // Führt die Befehle im Code aus
     private void executeCommands(String[] commands, boolean ifLoop) {
         commandRunnable = new Runnable() {
-            int index = 0;
+            int index = 0; // Index für den aktuellen Befehl
 
             @Override
             public void run() {
-                // Prüfen, ob die Schleife abgebrochen werden soll
+                // Falls "Front Is Clear" nicht mehr wahr ist, sofort abbrechen
                 if (!isFrontClear) {
                     returnToCodeScreenImmediately();
                     return;
                 }
 
+                // Führe die Befehle der Reihe nach aus
                 if (index < commands.length) {
                     String command = commands[index].trim();
 
-                    // "loop"-Befehl ignorieren und stattdessen den Loop-Modus aktivieren
+                    // Ignoriere den "loop"-Befehl im Text und setze den Loop-Modus fort
                     if (command.equals("loop")) {
-                        index++; // Überspringe den "loop"-Befehl und setze den Loop fort
-                        handler.post(this);
+                        index++; // Überspringe den "loop"-Befehl und gehe zum nächsten Befehl
+                        handler.post(this); // Setze die Schleife fort
                         return;
                     }
 
+                    // Führe den aktuellen Befehl aus
                     if (!command.isEmpty()) {
-                        executeCommand(command);
+                        executeCommand(command); // Führe den Befehl aus (forward, left, right, stop)
                     }
 
-                    int delay = COMMAND_DELAY_FORWARD_MS;
+                    // Verzögerung anpassen basierend auf dem Befehl
+                    int delay = COMMAND_DELAY_FORWARD_MS; // Standardverzögerung für "forward"
                     if (command.equals("left") || command.equals("right")) {
-                        delay = COMMAND_DELAY_LEFT_RIGHT_MS;
+                        delay = COMMAND_DELAY_LEFT_RIGHT_MS; // Kürzere Verzögerung für "left" und "right"
                     }
 
+                    // Zum nächsten Befehl übergehen nach der Verzögerung
                     index++;
                     handler.postDelayed(this, delay);
                 } else if (ifLoop && isFrontClear) {
-                    // Setze den Index zurück und starte erneut, wenn in der Schleife und „Front Is Clear“
+                    // Wenn im Loop-Modus und "Front Is Clear", setze den Index zurück und starte von vorne
                     index = 0;
-                    handler.postDelayed(this, COMMAND_DELAY_LOOP_MS); // Verkürzte Pause zwischen den Loops
+                    handler.postDelayed(this, COMMAND_DELAY_LOOP_MS); // Verkürzte Verzögerung für Loop-Wiederholung
                 } else {
-                    // Nach Abschluss des normalen Ablaufs ohne Schleife oder wenn Loop abgebrochen wird
+                    // Wenn keine Befehle mehr auszuführen sind, kehre zum Code-Bildschirm zurück
                     returnToCodeScreen();
                 }
             }
         };
-        handler.post(commandRunnable);
+        handler.post(commandRunnable); // Starte die Befehlsausführung
     }
 
+    // Führe den jeweiligen Befehl aus, indem das Farbmuster der Felder geändert wird
     private void executeCommand(String command) {
         switch (command) {
             case "forward":
@@ -155,23 +168,24 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
+    // Bricht den Code sofort ab und kehrt zum Code-Bildschirm zurück
     private void returnToCodeScreenImmediately() {
-        // Entferne alle geplanten Befehle und kehre sofort zum Code-Bildschirm zurück
         handler.removeCallbacks(commandRunnable);  // Entfernt alle geplanten Befehle
         finish();  // Beende die aktuelle Aktivität
     }
 
+    // Kehrt nach einer kleinen Verzögerung zum Code-Bildschirm zurück
     private void returnToCodeScreen() {
-        handler.postDelayed(() -> finish(), RETURN_DELAY_MS);
+        handler.postDelayed(() -> finish(), RETURN_DELAY_MS); // Beende die Aktivität nach RETURN_DELAY_MS
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // Deregistriere den Lichtsensor-Listener und entferne alle geplanten Befehle
         if (lightSensor != null) {
             sensorManager.unregisterListener(lightSensorListener);
         }
-        handler.removeCallbacks(commandRunnable);  // Alle geplanten Befehle entfernen, wenn die Aktivität zerstört wird
+        handler.removeCallbacks(commandRunnable);  // Entferne alle geplanten Befehle beim Zerstören der Aktivität
     }
 }
-
