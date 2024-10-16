@@ -86,27 +86,27 @@ public class ResultActivity extends AppCompatActivity {
         @Override
         public void onSensorChanged(SensorEvent event) {
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
-                // Hole den aktuellen Lichtlevel in Lux
+                // Lichtlevel in Lux
                 float lightLevel = event.values[0];
-                isFrontClear = lightLevel > LIGHT_THRESHOLD; // Setze isFrontClear basierend auf dem Lichtlevel
+                isFrontClear = lightLevel > LIGHT_THRESHOLD;
 
                 // Wenn "Front Is Clear" nicht mehr wahr ist, breche den Code sofort ab
                 if (!isFrontClear) {
-                    returnToCodeScreenImmediately();  // Bricht sofort ab und kehrt zum Code-Bildschirm zurück
+                    returnToCodeScreenImmediately();
                 }
             }
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
-            // Keine Aktion erforderlich bei Änderungen der Genauigkeit
+            // Keine Aktion erforderlich
         }
     };
 
     // Führt die Befehle im Code aus
     private void executeCommands(String[] commands, boolean ifLoop) {
         commandRunnable = new Runnable() {
-            int index = 0; // Index für den aktuellen Befehl
+            int index = 0;
 
             @Override
             public void run() {
@@ -122,8 +122,8 @@ public class ResultActivity extends AppCompatActivity {
 
                     // Ignoriere den "loop"-Befehl im Text und setze den Loop-Modus fort
                     if (command.equals("loop")) {
-                        index++; // Überspringe den "loop"-Befehl und gehe zum nächsten Befehl
-                        handler.post(this); // Setze die Schleife fort
+                        index++;
+                        handler.post(this);
                         return;
                     }
 
@@ -146,7 +146,7 @@ public class ResultActivity extends AppCompatActivity {
                     index = 0;
                     handler.postDelayed(this, COMMAND_DELAY_LOOP_MS); // Verkürzte Verzögerung für Loop-Wiederholung
                 } else {
-                    // Wenn keine Befehle mehr auszuführen sind, kehre zum Code-Bildschirm zurück
+                    // Kehrt zum Code-Bildschirm zurück
                     returnToCodeScreen();
                 }
             }
@@ -154,7 +154,7 @@ public class ResultActivity extends AppCompatActivity {
         handler.post(commandRunnable); // Starte die Befehlsausführung
     }
 
-    // Führe den jeweiligen Befehl aus, indem das Farbmuster der Felder geändert wird
+    // Führe den jeweiligen Befehl aus, um Farbe der Felder zu ändern
     private void executeCommand(String command) {
         switch (command) {
             case "forward":
@@ -184,16 +184,16 @@ public class ResultActivity extends AppCompatActivity {
 
     // Kehrt nach einer kleinen Verzögerung zum Code-Bildschirm zurück
     private void returnToCodeScreen() {
-        handler.postDelayed(() -> finish(), RETURN_DELAY_MS); // Beende die Aktivität nach RETURN_DELAY_MS
+        handler.postDelayed(() -> finish(), RETURN_DELAY_MS); /
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Deregistriere den Lichtsensor-Listener und entferne alle geplanten Befehle
+
         if (lightSensor != null) {
             sensorManager.unregisterListener(lightSensorListener);
         }
-        handler.removeCallbacks(commandRunnable);  // Entferne alle geplanten Befehle beim Zerstören der Aktivität
+        handler.removeCallbacks(commandRunnable);
     }
 }
