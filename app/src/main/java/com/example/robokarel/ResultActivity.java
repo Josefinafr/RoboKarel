@@ -36,8 +36,8 @@ public class ResultActivity extends AppCompatActivity {
     private ImageView faceImage;
     private SensorManager sensorManager;
     private Sensor lightSensor;
-    private boolean isFrontClear = true; // Standardmäßig ist „Front Is Clear“ auf true gesetzt
-    private Handler handler = new Handler(Looper.getMainLooper()); // Handler zur Ausführung von verzögerten Aufgaben
+    private boolean isFrontClear = true;
+    private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable commandRunnable;
 
     @Override
@@ -45,28 +45,28 @@ public class ResultActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
 
-        // Initialisiere Views und setze das Bild für das "faceImage"
+        // Initialisiere und Laden Views und setze das Bild für das "faceImage"
         leftField = findViewById(R.id.leftField);
         rightField = findViewById(R.id.rightField);
         faceImage = findViewById(R.id.faceImage);
-        faceImage.setImageResource(R.drawable.face); // Lade das Bild für das Gesicht
+        faceImage.setImageResource(R.drawable.face);
 
         // Initialisiere den Lichtsensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
 
-        // Falls ein Lichtsensor verfügbar ist, registriere den Listener
+        // Registriere den Listener
         if (lightSensor != null) {
             sensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
         } else {
             Toast.makeText(this, "Lichtsensor nicht verfügbar", Toast.LENGTH_SHORT).show();
         }
 
-        // Hole den Code und den Loop-Modus aus der übergebenen Absicht (Intent)
+        // Code holen und den Loop-Modus aus der übergebenen Absicht (Intent)
         String code = getIntent().getStringExtra("code");
         boolean ifLoop = getIntent().getBooleanExtra("ifLoop", false);
 
-        // Überprüfe, ob der Text "loop" im Code vorhanden ist und aktiviere den Loop-Modus, falls er gefunden wird
+        // Text "loop" überprüft im Code vorhanden ist und aktiviere den Loop-Modus, falls er gefunden wird
         if (code != null && code.toLowerCase().contains("loop")) {
             ifLoop = true; // Setze Loop-Modus auf true, wenn "loop" im Code enthalten ist
         }
