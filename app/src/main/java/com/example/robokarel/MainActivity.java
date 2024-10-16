@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private Button rightButton;
     private Button stopButton;
     private Button playButton;
-    private Button loopButton; // Neuer Loop-Button
+    private Button loopButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         rightButton = findViewById(R.id.rightButton);
         stopButton = findViewById(R.id.stopButton);
         playButton = findViewById(R.id.playButton);
-        loopButton = findViewById(R.id.loopButton); // Neuer Loop-Button
+        loopButton = findViewById(R.id.loopButton); /
 
         // Hinzufügen der OnClickListener zu den Buttons
         forwardButton.setOnClickListener(v -> codeInput.append("forward\n"));
@@ -50,7 +50,6 @@ public class MainActivity extends AppCompatActivity {
 
         // OnClickListener für den Loop-Button
         loopButton.setOnClickListener(v -> {
-            // Fügt den Text "loop " in das EditText-Feld ein
             codeInput.append("loop\n");
         });
 
