@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         rightButton = findViewById(R.id.rightButton);
         stopButton = findViewById(R.id.stopButton);
         playButton = findViewById(R.id.playButton);
-        loopButton = findViewById(R.id.loopButton); /
+        loopButton = findViewById(R.id.loopButton);
 
         // Hinzufügen der OnClickListener zu den Buttons
         forwardButton.setOnClickListener(v -> codeInput.append("forward\n"));
