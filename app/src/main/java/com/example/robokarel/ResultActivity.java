@@ -68,7 +68,7 @@ public class ResultActivity extends AppCompatActivity {
 
         // Text "loop" überprüft im Code vorhanden ist und aktiviere den Loop-Modus, falls er gefunden wird
         if (code != null && code.toLowerCase().contains("loop")) {
-            ifLoop = true;
+            ifLoop = true; // Setze Loop-Modus auf true, wenn "loop" im Code enthalten ist
         }
 
         final boolean finalIfLoop = ifLoop; // Macht ifLoop final für die Lambda-Ausdrücke
@@ -81,12 +81,12 @@ public class ResultActivity extends AppCompatActivity {
         }
     }
 
-    // SensorEventListener für den Lichtsensor mit Lichtlevel in Lux
+    // SensorEventListener für den Lichtsensor
     private final SensorEventListener lightSensorListener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event) {
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
-
+                // Lichtlevel in Lux
                 float lightLevel = event.values[0];
                 isFrontClear = lightLevel > LIGHT_THRESHOLD;
 
@@ -146,6 +146,7 @@ public class ResultActivity extends AppCompatActivity {
                     index = 0;
                     handler.postDelayed(this, COMMAND_DELAY_LOOP_MS); // Verkürzte Verzögerung für Loop-Wiederholung
                 } else {
+                    // Kehrt zum Code-Bildschirm zurück
                     returnToCodeScreen();
                 }
             }
