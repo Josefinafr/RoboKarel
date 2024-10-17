@@ -184,7 +184,7 @@ public class ResultActivity extends AppCompatActivity {
 
     // Kehrt nach einer kleinen Verzögerung zum Code-Bildschirm zurück
     private void returnToCodeScreen() {
-        handler.postDelayed(() -> finish(), RETURN_DELAY_MS);
+        handler.postDelayed(() -> finish(), RETURN_DELAY_MS); /
     }
 
     @Override
