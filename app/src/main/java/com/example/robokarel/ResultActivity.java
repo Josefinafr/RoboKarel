@@ -13,14 +13,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-/**
- * ResultActivity
- *
- * The ResultActivity.java file is in charge of responding to commands given by MainActivity
- *
- * @author Josefina Fritz
- */
-
 public class ResultActivity extends AppCompatActivity {
 
     // Verzögerungen für verschiedene Befehle und Schleifen
