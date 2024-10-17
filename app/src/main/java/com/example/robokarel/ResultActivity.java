@@ -174,4 +174,3 @@ public class ResultActivity extends AppCompatActivity {
         handler.removeCallbacks(commandRunnable);  // Alle geplanten Befehle entfernen, wenn die Aktivität zerstört wird
     }
 }
-
